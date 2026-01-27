@@ -4,7 +4,6 @@ local CraftSim = select(2, ...)
 local GGUI = CraftSim.GGUI
 local GUTIL = CraftSim.GUTIL
 
----@class CraftSim.CUSTOMER_HISTORY.UI
 CraftSim.CUSTOMER_HISTORY.UI = {}
 
 ---@type CraftSim.CUSTOMER_HISTORY.FRAME
@@ -523,19 +522,22 @@ function CraftSim.CUSTOMER_HISTORY.UI:UpdateCustomerCraftHistory(craftHistory)
             noteColumn.icon:SetText(craft.customerNotes)
             noteColumn.icon:SetEnabled(#craft.customerNotes > 0)
 
-            local reagentItems = CraftSim.GUTIL:Map(craft.reagents,
-                function(r) return Item:CreateFromItemID(r.reagent.itemID) end)
+            ---@type fun(r: CraftingOrderReagentInfo): ItemMixin?
+            local mapFunc = function(r) return r.reagentInfo.reagent.itemID and Item:CreateFromItemID(r.reagentInfo.reagent.itemID) or nil end
+            local reagentItems = CraftSim.GUTIL:Map(craft.reagents, mapFunc)
             CraftSim.GUTIL:ContinueOnAllItemsLoaded(reagentItems, function()
                 local reagentText = ""
                 for _, reagent in pairs(craft.reagents) do
-                    local item = Item:CreateFromItemID(reagent.reagent.itemID)
-                    local qualityID = CraftSim.GUTIL:GetQualityIDFromLink(item:GetItemLink())
-                    local qualityIcon = ""
-                    local itemIcon = CraftSim.GUTIL:IconToText(item:GetItemIcon(), 20, 20)
-                    if qualityID then
-                        qualityIcon = CraftSim.GUTIL:GetQualityIconString(qualityID, 20, 20, 0, 0)
+                    if reagent.reagentInfo.reagent.itemID then
+                        local item = Item:CreateFromItemID(reagent.reagentInfo.reagent.itemID)
+                        local qualityID = CraftSim.GUTIL:GetQualityIDFromLink(item:GetItemLink())
+                        local qualityIcon = ""
+                        local itemIcon = CraftSim.GUTIL:IconToText(item:GetItemIcon(), 20, 20)
+                        if qualityID then
+                            qualityIcon = CraftSim.GUTIL:GetQualityIconString(qualityID, 20, 20, 0, 0)
+                        end
+                        reagentText = reagentText .. itemIcon .. qualityIcon .. " x " .. reagent.reagentInfo.quantity .. "\n"
                     end
-                    reagentText = reagentText .. itemIcon .. qualityIcon .. " x " .. reagent.reagent.quantity .. "\n"
                 end
                 reagentColumn.icon:SetText(reagentText)
             end)

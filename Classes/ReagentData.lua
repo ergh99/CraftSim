@@ -231,7 +231,8 @@ function CraftSim.ReagentData:SetOptionalReagent(itemID)
     for _, slot in pairs(GUTIL:Concat({ self.optionalReagentSlots, self.finishingReagentSlots })) do
         local optionalReagent = GUTIL:Find(slot.possibleReagents,
             function(optionalReagent)
-                return optionalReagent.item:GetItemID() == itemID
+                -- item is not populated for currency reagents
+                return optionalReagent.item and optionalReagent.item:GetItemID() == itemID
             end)
 
         if optionalReagent then
@@ -275,7 +276,7 @@ end
 
 function CraftSim.ReagentData:GetMaxSkillFactor()
     local maxQualityReagentsCraftingTbl = GUTIL:Map(self.requiredReagents, function(rr)
-        return rr:GetCraftingReagentInfoByQuality(3, true)
+        return rr:GetCraftingReagentInfoByQuality(self.recipeData:IsSimplifiedQualityRecipe() and 2 or 3, true)
     end)
 
     -- explicitly do not use concentration flag here
@@ -732,8 +733,8 @@ function CraftSim.ReagentData:UpdateItemCountCacheForAllocatedReagents()
     local craftingReagentInfoTbl = self:GetCraftingReagentInfoTbl()
 
     for _, craftingReagentInfo in pairs(craftingReagentInfoTbl) do
-        --- itemID now nested, remove comment when wow doc extension is caught up
         local itemCount = C_Item.GetItemCount(craftingReagentInfo.reagent.itemID, true, false, true)
+        -- TODO requires update: Save() doesn't exist, only per-location values exist but this is the sum of inventory and bank
         CraftSim.DB.ITEM_COUNT:Save(crafterUID, craftingReagentInfo.reagent.itemID, itemCount)
     end
 end

@@ -10,6 +10,7 @@ end
 
 --- Adds the object to DevTool if DevTool is loaded
 ---@param label string
+---@diagnostic disable: undefined-global
 function CraftSim.CraftSimObject:DebugInspect(label)
     if DevTool then
         DevTool:AddData(self, label)
